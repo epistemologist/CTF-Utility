@@ -12,7 +12,7 @@ def process_input(line, valid_modes):
 	return None
 
 def base58_encode(bytes_in):
-	N = int(base64.b16encode(bytes_in).decode(),16)
+	N = bytes_to_int(bytes_in)
 	chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
 	out = ""
 	while N > 0:
@@ -23,11 +23,33 @@ def base58_encode(bytes_in):
 def base58_decode(s_in):
 	s_in = s_in[::-1]
 	chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-	return bytes.fromhex(hex(sum([chars.index(s_in[i])*58**i for i in range(len(s_in))]))[2:])
+	return int_to_bytes(sum([chars.index(s_in[i])*58**i for i in range(len(s_in))]))
 
-print(base58_decode("ZiCa"))
+def bytes_to_int(b):
+	return int(base64.b16encode(b).decode(),16)
+def int_to_bytes(N):
+	return bytes.fromhex(hex(N)[2:])
+
 throw_error = lambda e: print("Something went wrong! Here's an error: ", e)
 class HelloWorld(cmd.Cmd):
+	def do_base8(self, line):
+		temp = process_input(line, ["d", "e"])
+		if temp:
+			mode, string = temp
+			if mode == "d":
+				try:
+					print(int_to_bytes(int(string,8)))
+					return
+				except Exception as e:
+					throw_error(e); return
+			if mode == "e":
+				try:
+					print(oct(bytes_to_int(string.encode()))[2:])
+					return
+				except Exception as e:
+					throw_error(e); return
+		print("Invalid syntax!")
+		return
 	def do_base16(self, line):
 		temp = process_input(line, ["d", "e"])
 		if temp:
@@ -76,7 +98,7 @@ class HelloWorld(cmd.Cmd):
 					throw_error(e); return
 			if mode == "e":
 				try:
-					print(base58_encode(string))
+					print(base58_encode(string.encode()))
 					return
 				except Exception as e:
 					throw_error(e); return
@@ -120,8 +142,8 @@ class HelloWorld(cmd.Cmd):
 		return
 	def do_EOF(self, line):
 		return True
-"""
+
 if __name__ == '__main__':
 	HelloWorld().cmdloop()
 
-"""
+
